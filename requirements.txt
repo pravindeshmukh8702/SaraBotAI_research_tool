@@ -1,0 +1,12 @@
+streamlit
+google-generativeai
+python-dotenv
+langchain
+unstructured
+selenium
+chromadb
+sentence-transformers
+pandas
+plotly
+beautifulsoup4
+requests
