@@ -797,3 +797,7 @@ chmod +x fix_aws_deployment.sh
 Or copy the `fix_aws_deployment.sh` file to your server and run it.
 
 **For detailed troubleshooting, see:** [DEPLOYMENT_TROUBLESHOOTING.md](DEPLOYMENT_TROUBLESHOOTING.md)
+
+
+
+git pull origin main
