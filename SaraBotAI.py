@@ -7,8 +7,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import UnstructuredURLLoader, SeleniumURLLoader
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.memory import ConversationBufferMemory
-# Note: Requires langchain package (not just langchain-community)
+# Using simple list-based memory instead of ConversationBufferMemory to avoid dependency issues
+# from langchain.memory import ConversationBufferMemory
 from datetime import datetime
 import pandas as pd
 import plotly.express as px
@@ -62,7 +62,7 @@ if 'conversation_history' not in st.session_state:
 if 'processed_urls' not in st.session_state:
     st.session_state.processed_urls = []
 if 'memory' not in st.session_state:
-    st.session_state.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    st.session_state.memory = []  # Simple list to store conversation history
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())[:8]
 
@@ -217,11 +217,9 @@ def generate_openai_response(prompt, context=None):
         
         response_text = response.choices[0].message.content
         
-        # Add to conversation history
-        st.session_state.memory.save_context(
-            {"input": prompt},
-            {"output": response_text}
-        )
+        # Add to conversation history (simple list-based memory)
+        st.session_state.memory.append({"role": "user", "content": prompt})
+        st.session_state.memory.append({"role": "assistant", "content": response_text})
         
         return response_text
     except Exception as e:
@@ -453,9 +451,10 @@ if query:
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
             
-            # Generate response with conversation history
-            chat_history = st.session_state.memory.load_memory_variables({})['chat_history']
-            history_context = "\n".join([f"{msg.content}" for msg in chat_history[-4:]])  # Last 4 messages
+            # Generate response with conversation history (simple list-based memory)
+            # Get last 4 messages from memory
+            recent_messages = st.session_state.memory[-8:] if len(st.session_state.memory) > 8 else st.session_state.memory
+            history_context = "\n".join([f"{msg['role']}: {msg['content']}" for msg in recent_messages])
             
             with st.spinner("Analyzing content and generating response..."):
                 final_prompt = f"""
