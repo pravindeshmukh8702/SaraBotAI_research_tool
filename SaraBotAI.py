@@ -8,6 +8,7 @@ from langchain_community.document_loaders import UnstructuredURLLoader, Selenium
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.memory import ConversationBufferMemory
+# Note: Requires langchain package (not just langchain-community)
 from datetime import datetime
 import pandas as pd
 import plotly.express as px
