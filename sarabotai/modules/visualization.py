@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.express as px
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 class Visualizer:
     @staticmethod
