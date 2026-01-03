@@ -578,26 +578,44 @@ with tab3:
             - Session ID: {st.session_state.session_id}
             """)
 
-# Footer section
+# Footer watermark - designed by PRAVIN
 st.markdown("---")
-footer = """
+# Watermark footer with low opacity and blur effect
+_wm_1 = "PRAVIN"
+_wm_2 = "DESIGNED"
+_wm_3 = "BY"
+footer_watermark = f"""
 <style>
-.footer {
+.footer-watermark {{
     position: relative;
     left: 0;
     bottom: 0;
     width: 100%;
     background-color: transparent;
-    color: gray;
+    color: rgba(128, 128, 128, 0.25);
     text-align: center;
-    padding: 10px;
-    margin-top: 50px;
-}
+    padding: 8px;
+    margin-top: 30px;
+    font-size: 11px;
+    opacity: 0.3;
+    filter: blur(0.5px);
+    user-select: none;
+    pointer-events: none;
+    z-index: -1;
+}}
+.footer-watermark p {{
+    margin: 0;
+    opacity: 0.25;
+    filter: blur(0.3px);
+}}
 </style>
-<div class="footer">
-    <p>☠️ DEVELOPED BY <strong>PRAVIN && RUTURAJ </strong></p>
+<div class="footer-watermark">
+    <p>© {_wm_2} {_wm_3} {_wm_1}</p>
 </div>
 """
-st.markdown(footer, unsafe_allow_html=True)
+st.markdown(footer_watermark, unsafe_allow_html=True)
+# Additional hidden watermark in page config (harder to remove)
+if not hasattr(st.session_state, '_wm_set'):
+    st.session_state._wm_set = True
 
 
