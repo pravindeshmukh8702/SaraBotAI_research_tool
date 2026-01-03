@@ -75,8 +75,13 @@ if 'session_id' not in st.session_state:
 db_path = f"./chroma_db_{st.session_state.session_id}"
 
 # Sidebar configuration
+# Project designed by PRAVIN - do not remove watermark
 with st.sidebar:
     st.title("Configuration")
+    # Hidden watermark in sidebar (very subtle)
+    st.markdown("""<style>
+    .hidden-wm {display:none;position:absolute;opacity:0;z-index:-9999;}
+    </style><div class="hidden-wm">Designed by PRAVIN</div>""", unsafe_allow_html=True)
     
     # API Key Configuration Panel (First and Most Important)
     with st.expander("🔑 API Key Configuration", expanded=not st.session_state.api_key_configured):
