@@ -2,8 +2,7 @@ import os
 import time
 import streamlit as st
 import google.generativeai as genai
-from dotenv import load_dotenv
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from dotenv import load_dotenvfrom langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.document_loaders import UnstructuredURLLoader, SeleniumURLLoader
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
