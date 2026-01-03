@@ -779,3 +779,21 @@ sudo journalctl -u sarabot -f
 **Your SaraBot AI is now running on AWS! 🎉**
 
 Access it at: `http://YOUR_EC2_PUBLIC_IP:8501`
+
+---
+
+## 🛠️ Quick Fix Script for Common Issues
+
+If you encounter import errors or other deployment issues, run this script on your AWS instance:
+
+```bash
+# Download and run the fix script
+cd ~/SaraBotAI_research_tool
+wget https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/fix_aws_deployment.sh
+chmod +x fix_aws_deployment.sh
+./fix_aws_deployment.sh
+```
+
+Or copy the `fix_aws_deployment.sh` file to your server and run it.
+
+**For detailed troubleshooting, see:** [DEPLOYMENT_TROUBLESHOOTING.md](DEPLOYMENT_TROUBLESHOOTING.md)
