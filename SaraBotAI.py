@@ -1,7 +1,7 @@
 import os
 import time
 import streamlit as st
-import google.generativeai as genai
+from openai import OpenAI
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import UnstructuredURLLoader, SeleniumURLLoader
@@ -20,15 +20,15 @@ import atexit
 
 # Load environment variables (optional fallback)
 load_dotenv()
-GEMINI_API_KEY_new = os.getenv("GEMINI_API_KEY_new")
+OPENAI_API_KEY_new = os.getenv("OPENAI_API_KEY")
 
 # Initialize session state for API key
-if 'gemini_api_key' not in st.session_state:
-    st.session_state.gemini_api_key = None
+if 'openai_api_key' not in st.session_state:
+    st.session_state.openai_api_key = None
 if 'api_key_configured' not in st.session_state:
     st.session_state.api_key_configured = False
-if 'model' not in st.session_state:
-    st.session_state.model = None
+if 'client' not in st.session_state:
+    st.session_state.client = None
 
 # App title and config
 st.set_page_config(page_title="SaraBot AI: Advanced Search Tool", page_icon="🤖", layout="wide")
@@ -75,31 +75,34 @@ with st.sidebar:
     # API Key Configuration Panel (First and Most Important)
     with st.expander("🔑 API Key Configuration", expanded=not st.session_state.api_key_configured):
         if not st.session_state.api_key_configured:
-            st.info("⚠️ Please enter your Gemini API key to continue")
+            st.info("⚠️ Please enter your OpenAI API key to continue")
             api_key_input = st.text_input(
-                "Gemini API Key",
+                "OpenAI API Key",
                 type="password",
-                placeholder="Enter your Google Gemini API key here",
-                help="Get your API key from: https://makersuite.google.com/app/apikey"
+                placeholder="Enter your OpenAI API key here",
+                help="Get your API key from: https://platform.openai.com/api-keys"
             )
             
             if st.button("Save API Key", type="primary"):
                 if api_key_input and len(api_key_input.strip()) > 0:
                     try:
-                        # Test the API key by configuring Gemini
-                        genai.configure(api_key=api_key_input.strip())
-                        test_model = genai.GenerativeModel("gemini-1.5-pro-latest")
+                        # Test the API key by creating OpenAI client
+                        test_client = OpenAI(api_key=api_key_input.strip())
                         # Quick test to validate key (simple test prompt)
                         try:
-                            test_model.generate_content("Hi")
+                            test_client.chat.completions.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "user", "content": "Hi"}],
+                                max_tokens=5
+                            )
                         except:
                             # Some API keys might have restrictions, but if config works, proceed
                             pass
                         
                         # Save to session state
-                        st.session_state.gemini_api_key = api_key_input.strip()
+                        st.session_state.openai_api_key = api_key_input.strip()
                         st.session_state.api_key_configured = True
-                        st.session_state.model = test_model
+                        st.session_state.client = test_client
                         st.success("✅ API key saved successfully!")
                         st.rerun()
                     except Exception as e:
@@ -113,9 +116,9 @@ with st.sidebar:
         else:
             st.success("✅ API key configured")
             if st.button("Change API Key"):
-                st.session_state.gemini_api_key = None
+                st.session_state.openai_api_key = None
                 st.session_state.api_key_configured = False
-                st.session_state.model = None
+                st.session_state.client = None
                 st.rerun()
     
     st.markdown("---")
@@ -188,35 +191,38 @@ def get_article_metadata(url):
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
-# Function to call Gemini API with enhanced error handling
-def generate_gemini_response(prompt, context=None):
-    if not st.session_state.api_key_configured or not st.session_state.model:
+# Function to call OpenAI API with enhanced error handling
+def generate_openai_response(prompt, context=None):
+    if not st.session_state.api_key_configured or not st.session_state.client:
         return "⚠️ Please configure your API key first in the sidebar."
     
     try:
-        generation_config = {
-            "temperature": temperature,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 2048,
-        }
-        
         if context:
-            prompt = f"Context:\n{context}\n\nQuestion:\n{prompt}\n\nAnswer:"
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant that provides detailed answers based on the given context."},
+                {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}\n\nAnswer:"}
+            ]
+        else:
+            messages = [
+                {"role": "user", "content": prompt}
+            ]
         
-        response = st.session_state.model.generate_content(
-            prompt,
-            generation_config=generation_config,
-            stream=False
+        response = st.session_state.client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            temperature=temperature,
+            max_tokens=2048
         )
+        
+        response_text = response.choices[0].message.content
         
         # Add to conversation history
         st.session_state.memory.save_context(
             {"input": prompt},
-            {"output": response.text}
+            {"output": response_text}
         )
         
-        return response.text
+        return response_text
     except Exception as e:
         return f"Error generating response: {str(e)}"
 
@@ -369,7 +375,7 @@ def generate_summary_report():
             """
             
             with st.spinner("Generating comprehensive report..."):
-                report = generate_gemini_response(summary_prompt)
+                report = generate_openai_response(summary_prompt)
                 return report
         except Exception as e:
             return f"Error generating report: {str(e)}"
@@ -404,12 +410,12 @@ def visualize_topics():
 
 # Check if API key is configured before allowing operations
 if not st.session_state.api_key_configured:
-    st.warning("⚠️ **Please configure your Gemini API key in the sidebar to use this application.**")
+    st.warning("⚠️ **Please configure your OpenAI API key in the sidebar to use this application.**")
     st.info("""
     **How to get your API key:**
-    1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-    2. Sign in with your Google account
-    3. Click "Create API Key"
+    1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+    2. Sign in with your OpenAI account
+    3. Click "Create new secret key"
     4. Copy the API key and paste it in the sidebar
     """)
     st.stop()
@@ -463,7 +469,7 @@ if query:
                 Please provide a detailed answer citing sources where appropriate.
                 """
                 
-                response = generate_gemini_response(final_prompt)
+                response = generate_openai_response(final_prompt)
                 
                 # Display response in chat format
                 with st.chat_message("user"):
@@ -560,7 +566,7 @@ with tab3:
         if st.button("Show API Usage"):
             st.info(f"""
             Current configuration:
-            - Model: Gemini 1.5 Pro
+            - Model: GPT-3.5 Turbo
             - Embeddings: HuggingFace MiniLM
             - Chunk Size: {chunk_size}
             - Max Results: {max_results}

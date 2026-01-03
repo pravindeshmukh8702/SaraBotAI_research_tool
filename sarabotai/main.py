@@ -11,6 +11,7 @@ st.set_page_config(
 
 # Now import other modules
 from modules import gemini_integration, data_processing, vector_store, web_scraper
+# Note: gemini_integration.py now contains OpenAIIntegration class
 from utils import session_manager
 import os
 
@@ -54,7 +55,7 @@ def apply_dark_theme():
 
 # Initialize components after theme
 apply_dark_theme()
-gemini = gemini_integration.GeminiIntegration()
+openai_client = gemini_integration.OpenAIIntegration()
 data_processor = data_processing.DataProcessor()
 vector_db = vector_store.VectorStore()
 scraper = web_scraper.WebScraper()
