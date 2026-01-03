@@ -2,18 +2,11 @@ import os
 import time
 import streamlit as st
 import google.generativeai as genai
-<<<<<<< HEAD
-from dotenv import load_dotenvfrom langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.document_loaders import UnstructuredURLLoader, SeleniumURLLoader
-from langchain.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
-=======
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import UnstructuredURLLoader, SeleniumURLLoader
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
->>>>>>> 84a8258 (Add AWS EC2 deployment guide to README, update requirements for langchain packages, and refactor imports in source files)
 from langchain.memory import ConversationBufferMemory
 from datetime import datetime
 import pandas as pd
