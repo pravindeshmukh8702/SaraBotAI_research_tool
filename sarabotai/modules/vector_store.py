@@ -1,7 +1,7 @@
 import os
 import shutil
 from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from config import Config
 
 class VectorStore:

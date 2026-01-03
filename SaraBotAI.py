@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import UnstructuredURLLoader, SeleniumURLLoader
 from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 # Using simple list-based memory instead of ConversationBufferMemory to avoid dependency issues
 # from langchain.memory import ConversationBufferMemory
 from datetime import datetime
@@ -35,16 +35,21 @@ if 'client' not in st.session_state:
 st.set_page_config(page_title="SaraBot AI: Advanced Search Tool", page_icon="🤖", layout="wide")
 st.title("SaraBot AI: Advanced Search Tool 🤖")
 
-# Initialize embeddings with device handling fix
-try:
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'},  # Forced to CPU to avoid meta tensor issue
-        encode_kwargs={'normalize_embeddings': True}
-    )
-except Exception as e:
-    st.error(f"Failed to initialize embeddings: {str(e)}")
-    embeddings = None
+# Initialize embeddings with device handling fix (lazy loading to save memory)
+embeddings = None
+def get_embeddings():
+    global embeddings
+    if embeddings is None:
+        try:
+            embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'},  # Forced to CPU to avoid meta tensor issue
+                encode_kwargs={'normalize_embeddings': True}
+            )
+        except Exception as e:
+            st.error(f"Failed to initialize embeddings: {str(e)}")
+            embeddings = None
+    return embeddings
 
 # Cleanup function for Windows file locking issues
 def cleanup_chroma_db():
@@ -266,7 +271,7 @@ def process_urls(url_list, uploaded_file=None):
                 # Create vector store
                 vectorstore_chroma = Chroma.from_documents(
                     docs, 
-                    embeddings, 
+                    get_embeddings(), 
                     persist_directory=db_path
                 )
                 vectorstore_chroma.persist()
@@ -310,7 +315,7 @@ def process_urls(url_list, uploaded_file=None):
                 # Create new vector store
                 vectorstore_chroma = Chroma.from_documents(
                     docs, 
-                    embeddings, 
+                    get_embeddings(), 
                     persist_directory=db_path
                 )
                 vectorstore_chroma.persist()
@@ -348,7 +353,7 @@ def show_processed_articles():
 # Function to generate summary report
 def generate_summary_report():
     if os.path.exists(db_path):
-        vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings)
+        vectorstore = Chroma(persist_directory=db_path, embedding_function=get_embeddings())
         
         try:
             # Get all documents
@@ -384,7 +389,7 @@ def generate_summary_report():
 # Function to visualize topics
 def visualize_topics():
     if os.path.exists(db_path):
-        vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings)
+        vectorstore = Chroma(persist_directory=db_path, embedding_function=get_embeddings())
         try:
             docs = vectorstore.similarity_search("", k=5)
             
@@ -434,7 +439,7 @@ else:
 
 if query:
     if os.path.exists(db_path):
-        vectorstore = Chroma(persist_directory=db_path, embedding_function=embeddings)
+        vectorstore = Chroma(persist_directory=db_path, embedding_function=get_embeddings())
         
         # Enhanced similarity search with score threshold
         retrieved_docs = vectorstore.similarity_search_with_score(query, k=max_results)
